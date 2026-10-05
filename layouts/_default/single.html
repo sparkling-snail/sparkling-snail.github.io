@@ -1,0 +1,13 @@
+{{ define "main" }}
+<article>
+  <header class="post-header">
+    <h1>{{ .Title }}</h1>
+    {{ if eq .Section "posts" }}
+      <p class="meta">{{ .Date.Format "2 Jan 2006" }} · {{ .ReadingTime }} min read</p>
+    {{ end }}
+    {{ with .Params.tags }}<p class="tags">{{ range . }}<span>{{ . }}</span>{{ end }}</p>{{ end }}
+    {{ with .Params.repo }}<p><a class="btn" href="{{ . }}">View code →</a></p>{{ end }}
+  </header>
+  <div class="prose">{{ .Content }}</div>
+</article>
+{{ end }}

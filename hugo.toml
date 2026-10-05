@@ -1,0 +1,35 @@
+baseURL = "https://sparkling-snail.github.io/"
+languageCode = "en-sg"
+title = "Wee Teo"
+enableRobotsTXT = true
+
+[params]
+  description = "SRE on GPU model serving at scale. Building toward inference engineering."
+  github = "https://github.com/sparkling-snail"
+  linkedin = ""   # add your LinkedIn URL
+  email = ""      # optional public email
+
+[menus]
+  [[menus.main]]
+    name = "Projects"
+    pageRef = "/projects"
+    weight = 10
+  [[menus.main]]
+    name = "Writing"
+    pageRef = "/posts"
+    weight = 20
+  [[menus.main]]
+    name = "About"
+    pageRef = "/about"
+    weight = 30
+
+[markup]
+  [markup.highlight]
+    noClasses = false
+    style = "github"
+  [markup.goldmark.renderer]
+    unsafe = true
+
+[outputs]
+  home = ["HTML", "RSS"]
+  section = ["HTML", "RSS"]

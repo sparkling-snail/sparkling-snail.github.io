@@ -1,0 +1,23 @@
+{{ define "main" }}
+<section class="hero">
+  <h1>Hi, I'm Wee.</h1>
+  <p class="lead">{{ site.Params.description }}</p>
+  <p>I run GPU model serving infrastructure across ~8,500 servers. On the side I build inference systems from scratch to understand them properly: batching, KV caches, schedulers and routing.</p>
+</section>
+
+<section>
+  <h2 class="section-title">Projects <a class="more" href="{{ "projects/" | relURL }}">all →</a></h2>
+  {{ range first 3 (where site.RegularPages "Section" "projects").ByWeight }}
+    {{ partial "card.html" . }}
+  {{ end }}
+</section>
+
+<section>
+  <h2 class="section-title">Writing <a class="more" href="{{ "posts/" | relURL }}">all →</a></h2>
+  {{ range first 5 (where site.RegularPages "Section" "posts") }}
+    {{ partial "post-row.html" . }}
+  {{ else }}
+    <p class="meta">First posts coming soon.</p>
+  {{ end }}
+</section>
+{{ end }}

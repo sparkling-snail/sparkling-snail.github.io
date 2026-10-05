@@ -1,0 +1,5 @@
+<a class="card" href="{{ .RelPermalink }}">
+  <h3>{{ .Title }}</h3>
+  <p>{{ .Params.summary | default .Summary | plainify }}</p>
+  {{ with .Params.tags }}<p class="tags">{{ range . }}<span>{{ . }}</span>{{ end }}</p>{{ end }}
+</a>
