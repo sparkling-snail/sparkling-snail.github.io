@@ -1,34 +1,58 @@
 <!doctype html>
-<html lang="{{ site.LanguageCode }}">
+<html lang="{{ site.LanguageCode }}" data-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ if .IsHome }}{{ site.Title }}{{ else }}{{ .Title }} · {{ site.Title }}{{ end }}</title>
-  <meta name="description" content="{{ with .Description }}{{ . }}{{ else }}{{ with .Summary }}{{ . | plainify | truncate 160 }}{{ else }}{{ site.Params.description }}{{ end }}{{ end }}">
-  <meta property="og:title" content="{{ .Title }}">
+  {{- $title := cond .IsHome site.Title (printf "%s · %s" .Title site.Title) -}}
+  {{- $desc := site.Params.description -}}
+  {{- with .Description }}{{ $desc = . }}{{ else }}{{ if .IsPage }}{{ with .Params.summary }}{{ $desc = . }}{{ else }}{{ with .Summary }}{{ $desc = . | plainify | truncate 160 }}{{ end }}{{ end }}{{ end }}{{ end }}
+  <title>{{ $title }}</title>
+  <meta name="description" content="{{ $desc }}">
+  <meta name="theme-color" content="#0f172a">
+  <link rel="canonical" href="{{ .Permalink }}">
+
+  {{/* Social previews (LinkedIn, Slack, X) */}}
+  <meta property="og:site_name" content="{{ site.Title }}">
+  <meta property="og:title" content="{{ $title }}">
+  <meta property="og:description" content="{{ $desc }}">
   <meta property="og:type" content="{{ if .IsPage }}article{{ else }}website{{ end }}">
   <meta property="og:url" content="{{ .Permalink }}">
+  <meta property="og:image" content="{{ "og.png" | absURL }}">
+  <meta name="twitter:card" content="summary_large_image">
+
+  {{/* Apply the saved theme before first paint, so there's no flash */}}
+  <script>
+    document.documentElement.classList.add('js');
+    try { var t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ "css/style.css" | relURL }}">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><linearGradient id='g' x1='0' x2='1'><stop offset='0' stop-color='%23d60067'/><stop offset='1' stop-color='%238311c0'/></linearGradient></defs><rect width='64' height='64' rx='16' fill='url(%23g)'/><text x='32' y='43' font-family='Arial' font-weight='700' font-size='30' fill='white' text-anchor='middle'>W</text></svg>">
   {{ with .OutputFormats.Get "rss" }}<link rel="alternate" type="application/rss+xml" href="{{ .Permalink }}" title="{{ site.Title }}">{{ end }}
 </head>
 <body>
-  <header class="wrap site-header">
-    <a class="brand" href="{{ "/" | relURL }}">{{ site.Title }}</a>
-    <nav>
-      {{ range site.Menus.main }}<a href="{{ .URL }}">{{ .Name }}</a>{{ end }}
-    </nav>
-  </header>
-  <main class="wrap">
+  {{ partial "header.html" . }}
+
+  <main class="container">
     {{ block "main" . }}{{ end }}
   </main>
-  <footer class="wrap site-footer">
-    <span>© {{ now.Year }} Teo Wee Tin</span>
-    <span>
-      {{ with site.Params.github }}<a href="{{ . }}">GitHub</a>{{ end }}
-      {{ with site.Params.linkedin }}<a href="{{ . }}">LinkedIn</a>{{ end }}
-      {{ with site.Params.email }}<a href="mailto:{{ . }}">Email</a>{{ end }}
-      <a href="{{ "posts/index.xml" | relURL }}">RSS</a>
-    </span>
-  </footer>
+
+  {{ partial "footer.html" . }}
+
+  <button class="to-top" aria-label="Back to top" data-to-top>
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+  </button>
+
+  <script src="{{ "js/main.js" | relURL }}" defer></script>
+  {{ if .Store.Get "hasMermaid" }}
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+    const dark = document.documentElement.dataset.theme !== "light";
+    mermaid.initialize({ startOnLoad: true, theme: dark ? "dark" : "default", fontFamily: "Poppins, sans-serif" });
+  </script>
+  {{ end }}
 </body>
 </html>

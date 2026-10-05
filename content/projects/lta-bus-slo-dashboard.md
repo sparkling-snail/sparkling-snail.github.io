@@ -1,6 +1,7 @@
 ---
 title: "SLO monitoring for the LTA Bus Arrival API"
 summary: "SLOs, error budgets and multi-window burn-rate alerts for a public API, built with Prometheus, Grafana and Alertmanager."
+glyph: "99.9"
 weight: 30
 tags: ["prometheus", "grafana", "slo", "fastapi", "docker-compose"]
 repo: ""

@@ -1,6 +1,7 @@
 ---
 title: "Mini inference server with continuous batching"
 summary: "An LLM inference server built from scratch, progressing from naive batching to a KV cache and a continuous batching scheduler."
+glyph: "tok/s"
 weight: 10
 tags: ["python", "pytorch", "kv-cache", "continuous-batching"]
 repo: ""

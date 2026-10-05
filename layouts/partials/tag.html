@@ -1,0 +1,3 @@
+{{- $palette := slice "pink" "violet" "teal" "amber" "blue" "green" -}}
+{{- $i := mod (len (urlize .tag)) (len $palette) -}}
+<a class="tag tag--{{ index $palette $i }}" href="{{ printf "tags/%s/" (urlize .tag) | relURL }}">{{ .tag }}</a>

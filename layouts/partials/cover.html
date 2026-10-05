@@ -1,0 +1,15 @@
+{{- /* Card cover: the page's `image` if set, otherwise a generated "terminal" cover. */ -}}
+{{- $p := . -}}
+{{- $variants := slice "v1" "v2" "v3" "v4" -}}
+{{- $v := index $variants (mod (len $p.Title) 4) -}}
+<div class="cover cover--{{ $v }}">
+  {{ with $p.Params.image }}
+    <img src="{{ . | relURL }}" alt="" loading="lazy">
+  {{ else }}
+    <div class="cover-art" aria-hidden="true">
+      <div class="cover-dots"><span></span><span></span><span></span></div>
+      <code class="cover-path">~/{{ $p.Section }}/{{ $p.File.ContentBaseName }}</code>
+      <span class="cover-glyph">{{ $p.Params.glyph | default (cond (eq $p.Section "posts") "#" "{ }") }}</span>
+    </div>
+  {{ end }}
+</div>

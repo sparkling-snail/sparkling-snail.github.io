@@ -1,5 +1,13 @@
-<a class="card" href="{{ .RelPermalink }}">
-  <h3>{{ .Title }}</h3>
-  <p>{{ .Params.summary | default .Summary | plainify }}</p>
-  {{ with .Params.tags }}<p class="tags">{{ range . }}<span>{{ . }}</span>{{ end }}</p>{{ end }}
-</a>
+<article class="card reveal">
+  <a class="card-cover" href="{{ .RelPermalink }}" tabindex="-1" aria-hidden="true">{{ partial "cover.html" . }}</a>
+  <div class="card-body">
+    {{ with .Params.tags }}<div class="tags">{{ range first 3 . }}{{ partial "tag.html" (dict "tag" .) }}{{ end }}</div>{{ end }}
+    <h3 class="card-title"><a href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
+    <p class="card-text mono">{{ .Params.summary | default (.Summary | plainify | truncate 150) }}</p>
+    {{ if eq .Section "posts" }}
+      <p class="card-meta mono"><time>{{ .Date.Format "02 Jan 2006" }}</time><span>{{ .ReadingTime }} min read</span></p>
+    {{ else }}
+      <p class="card-meta mono"><span class="read-more">Read case study →</span></p>
+    {{ end }}
+  </div>
+</article>

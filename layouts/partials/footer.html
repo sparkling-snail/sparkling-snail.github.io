@@ -1,0 +1,30 @@
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div>
+      <a class="brand" href="{{ "" | relURL }}"><span class="brand-mark">W</span><span class="brand-name">{{ site.Title }}</span></a>
+      <p class="muted mono small">{{ site.Params.description }}</p>
+      {{ partial "socials.html" . }}
+    </div>
+    <div>
+      <h4>Recent writing</h4>
+      <ul class="footer-list">
+        {{ range first 3 (where site.RegularPages "Section" "posts") }}
+          <li><a href="{{ .RelPermalink }}">{{ .Title }}</a><span class="mono small muted">{{ .Date.Format "02 Jan 2006" }}</span></li>
+        {{ else }}
+          <li class="muted small mono">First posts coming soon.</li>
+        {{ end }}
+      </ul>
+    </div>
+    <div>
+      <h4>Site</h4>
+      <ul class="footer-list">
+        {{ range site.Menus.main }}<li><a href="{{ .URL }}">{{ .Name }}</a></li>{{ end }}
+        <li><a href="{{ "posts/index.xml" | relURL }}">RSS</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="container footer-bottom mono small muted">
+    <span>© {{ now.Year }} {{ site.Params.name }}</span>
+    <span>Built with Hugo · Hosted on GitHub Pages</span>
+  </div>
+</footer>

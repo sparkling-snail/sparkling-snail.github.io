@@ -1,9 +1,16 @@
 {{ define "main" }}
-<h1>{{ .Title }}</h1>
-{{ .Content }}
-{{ if eq .Section "projects" }}
-  {{ range .Pages.ByWeight }}{{ partial "card.html" . }}{{ end }}
+<header class="page-head">
+  <p class="eyebrow mono stagger" style="--i:0">{{ if eq .Kind "term" }}Topic{{ else }}{{ site.Title }}{{ end }}</p>
+  <h1 class="stagger" style="--i:1">{{ if eq .Kind "term" }}#{{ end }}{{ .Title }}</h1>
+  {{ with .Content }}<div class="lead stagger" style="--i:2">{{ . }}</div>{{ end }}
+</header>
+{{ $pages := .Pages }}
+{{ if eq .Section "projects" }}{{ $pages = .Pages.ByWeight }}{{ end }}
+{{ if eq .Kind "taxonomy" }}
+  <div class="tags tags--lg">{{ range .Data.Terms.ByCount }}{{ partial "tag.html" (dict "tag" .Page.Title) }}{{ end }}</div>
+{{ else if $pages }}
+  <div class="grid">{{ range $pages }}{{ partial "card.html" . }}{{ end }}</div>
 {{ else }}
-  {{ range .Pages }}{{ partial "post-row.html" . }}{{ end }}
+  <div class="panel empty"><p class="mono">Nothing here yet. Check back soon.</p></div>
 {{ end }}
 {{ end }}

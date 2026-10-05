@@ -1,13 +1,24 @@
 {{ define "main" }}
-<article>
-  <header class="post-header">
-    <h1>{{ .Title }}</h1>
-    {{ if eq .Section "posts" }}
-      <p class="meta">{{ .Date.Format "2 Jan 2006" }} · {{ .ReadingTime }} min read</p>
-    {{ end }}
-    {{ with .Params.tags }}<p class="tags">{{ range . }}<span>{{ . }}</span>{{ end }}</p>{{ end }}
-    {{ with .Params.repo }}<p><a class="btn" href="{{ . }}">View code →</a></p>{{ end }}
+<article class="article">
+  <header class="article-head">
+    {{ with .Params.tags }}<div class="tags stagger" style="--i:0">{{ range . }}{{ partial "tag.html" (dict "tag" .) }}{{ end }}</div>{{ end }}
+    <h1 class="stagger" style="--i:1">{{ .Title }}</h1>
+    {{ with .Params.summary }}<p class="lead stagger" style="--i:2">{{ . }}</p>{{ end }}
+    <div class="article-meta mono stagger" style="--i:3">
+      {{ if eq .Section "posts" }}<time>{{ .Date.Format "02 Jan 2006" }}</time><span>·</span><span>{{ .ReadingTime }} min read</span>{{ end }}
+      {{ with .Params.repo }}<a class="btn btn--gradient btn--sm" href="{{ . }}" target="_blank" rel="noopener">View code →</a>{{ end }}
+    </div>
   </header>
+
+  {{ if in (slice "projects" "posts") .Section }}<div class="article-cover stagger" style="--i:4">{{ partial "cover.html" . }}</div>{{ end }}
+
   <div class="prose">{{ .Content }}</div>
+
+  {{ if in (slice "projects" "posts") .Section }}
+  <nav class="article-nav">
+    {{ with .PrevInSection }}<a class="panel" href="{{ .RelPermalink }}"><span class="mono small muted">← Previous</span><span>{{ .Title }}</span></a>{{ else }}<span></span>{{ end }}
+    {{ with .NextInSection }}<a class="panel align-right" href="{{ .RelPermalink }}"><span class="mono small muted">Next →</span><span>{{ .Title }}</span></a>{{ end }}
+  </nav>
+  {{ end }}
 </article>
 {{ end }}
