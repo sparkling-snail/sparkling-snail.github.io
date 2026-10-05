@@ -6,7 +6,8 @@
     {{ with .Params.summary }}<p class="lead stagger" style="--i:2">{{ . }}</p>{{ end }}
     <div class="article-meta mono stagger" style="--i:3">
       {{ if eq .Section "posts" }}<time>{{ .Date.Format "02 Jan 2006" }}</time><span>·</span><span>{{ .ReadingTime }} min read</span>{{ end }}
-      {{ with .Params.repo }}<a class="btn btn--gradient btn--sm" href="{{ . }}" target="_blank" rel="noopener">View code →</a>{{ end }}
+      {{ with .Params.demo }}<a class="btn btn--gradient btn--sm" href="{{ . }}" target="_blank" rel="noopener">Live demo →</a>{{ end }}
+      {{ with .Params.repo }}<a class="btn {{ if $.Params.demo }}btn--ghost{{ else }}btn--gradient{{ end }} btn--sm" href="{{ . }}" target="_blank" rel="noopener">View code →</a>{{ end }}
     </div>
   </header>
 
