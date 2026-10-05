@@ -12,7 +12,7 @@
     <div class="timeline-head">
       <div>
         <h3>{{ $r.title }}</h3>
-        <p class="timeline-org">{{ $r.company }}{{ with $r.location }} <span class="muted">· {{ . }}</span>{{ end }}</p>
+        <p class="timeline-org">{{ $r.company }}{{ with $r.team }} · {{ . }}{{ end }}{{ with $r.location }} <span class="muted">· {{ . }}</span>{{ end }}</p>
       </div>
       <span class="timeline-dates mono small">{{ $r.dates }}</span>
     </div>
@@ -34,6 +34,7 @@
         </div>
         <span class="timeline-dates mono small">{{ $e.dates }}</span>
       </div>
+      {{ with $e.points }}<ul class="timeline-points">{{ range . }}<li>{{ . | markdownify }}</li>{{ end }}</ul>{{ end }}
     </li>
     {{ end }}
   </ol>

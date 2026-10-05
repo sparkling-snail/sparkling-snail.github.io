@@ -5,23 +5,27 @@ summary: "Hardware reliability to GPU inference infrastructure."
 
 roles:
   - company: "ByteDance / TikTok"
-    title: "Site Reliability Engineer, ML Platform / Production Engineering"
+    title: "Site Reliability Engineer (MLOps)"
+    team: "Applied Machine Learning – Inference"
     location: "Singapore"
-    dates: "20XX – Present"
+    dates: "Aug 2025 – Present"
     points:
-      - "Keep large-scale, multi-region GPU model serving reliable for many business units."
-      - "TODO: a system or project you owned, and what changed because of it."
-      - "TODO: an incident, migration or piece of tooling you're proud of."
+      - "Keep large-scale GPU model serving reliable."
+  - company: "ByteDance / TikTok"
+    title: "Site Reliability Engineer (Data Platform)"
+    location: "Singapore"
+    dates: "Aug 2024 – Aug 2025"
+    points:
+      - "Managed and deployed data platform and data transmission services globally."
   - company: "AMD"
     title: "Reliability Engineer"
     location: "Singapore"
-    dates: "20XX – 20XX"
-    points:
-      - "TODO: what you were responsible for."
-      - "TODO: one concrete outcome."
+    dates: "Jul 2022 – Aug 2024"
 
 education:
   - school: "National University of Singapore"
     degree: "B.Eng. Materials Science & Engineering (Honours, Highest Distinction)"
-    dates: "20XX – 20XX"
+    points:
+      - "Second Major in Innovation and Design (iDP)"
+    dates: "2018 – 2022"
 ---
