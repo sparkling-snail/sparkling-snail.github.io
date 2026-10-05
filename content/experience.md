@@ -21,6 +21,8 @@ roles:
     title: "Reliability Engineer"
     location: "Singapore"
     dates: "Jul 2022 – Aug 2024"
+    points:
+      - "Ran stress tests on AMD processors to find failures before they reached customers."
 
 education:
   - school: "National University of Singapore"
