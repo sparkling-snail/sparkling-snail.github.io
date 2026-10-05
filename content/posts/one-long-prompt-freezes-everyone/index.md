@@ -1,7 +1,7 @@
 ---
 title: "One long prompt freezes everyone: the maths of prefill stalls"
 date: 2026-07-14
-draft: false
+draft: true
 tags: ["inference", "gpu", "vllm", "tail-latency"]
 summary: "Someone pastes an 8,000-token document, and every other user's stream stops for 300 ms. Back-of-envelope GPU maths for why it happens, why chunked prefill fixes it, and the chunk size where the fix starts to cost you."
 glyph: "300ms"

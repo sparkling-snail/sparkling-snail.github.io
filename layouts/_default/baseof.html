@@ -7,6 +7,7 @@
   {{- $desc := site.Params.description -}}
   {{- with .Description }}{{ $desc = . }}{{ else }}{{ if .IsPage }}{{ with .Params.summary }}{{ $desc = . }}{{ else }}{{ with .Summary }}{{ $desc = . | plainify | truncate 160 }}{{ end }}{{ end }}{{ end }}{{ end }}
   <title>{{ $title }}</title>
+  {{ if eq hugo.Environment "preview" }}<meta name="robots" content="noindex, nofollow">{{ end }}
   <meta name="description" content="{{ $desc }}">
   <meta name="theme-color" content="#0f172a">
   <link rel="canonical" href="{{ .Permalink }}">
@@ -34,6 +35,7 @@
   {{ with .OutputFormats.Get "rss" }}<link rel="alternate" type="application/rss+xml" href="{{ .Permalink }}" title="{{ site.Title }}">{{ end }}
 </head>
 <body>
+  {{ if eq hugo.Environment "preview" }}<div class="preview-banner mono">Preview site: drafts are visible here and nowhere else. <a href="https://sparkling-snail.github.io/teoweetin/">Go to the live site →</a></div>{{ end }}
   {{ partial "header.html" . }}
 
   <main class="container">

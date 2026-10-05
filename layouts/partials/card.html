@@ -2,6 +2,7 @@
   <a class="card-cover" href="{{ .RelPermalink }}" tabindex="-1" aria-hidden="true">{{ partial "cover.html" . }}</a>
   <div class="card-body">
     {{ with .Params.tags }}<div class="tags">{{ range first 3 . }}{{ partial "tag.html" (dict "tag" .) }}{{ end }}</div>{{ end }}
+    {{ if .Draft }}<span class="draft-badge mono">Draft</span>{{ end }}
     <h3 class="card-title"><a href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
     <p class="card-text mono">{{ .Params.summary | default (.Summary | plainify | truncate 150) }}</p>
     {{ if eq .Section "posts" }}

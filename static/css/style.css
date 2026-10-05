@@ -466,3 +466,8 @@ pre.mermaid { background: var(--bg-alt) !important; text-align: center; }
 /* GenericTraceback */ .chroma .gt {  }
 /* GenericUnderline */ .chroma .gl { text-decoration:underline }
 /* TextWhitespace */ .chroma .w {  }
+
+/* Preview site (drafts) */
+.preview-banner { background: var(--gradient); color: #fff; text-align: center; font-size: 0.82rem; padding: 8px 16px; }
+.preview-banner a { color: #fff; text-decoration: underline; }
+.draft-badge { align-self: flex-start; font-size: 0.7rem; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); border: 1px solid var(--accent); border-radius: 6px; padding: 1px 8px; }

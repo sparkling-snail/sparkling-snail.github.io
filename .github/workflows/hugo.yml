@@ -31,6 +31,10 @@ jobs:
         # The site lives under /teoweetin/; the bare domain redirects there.
         run: |
           hugo --gc --minify --destination public/teoweetin
+          # Preview copy with drafts (unlisted, noindex) at /teoweetin/preview/
+          hugo --minify --buildDrafts --environment preview \
+            --baseURL "${{ steps.pages.outputs.base_url }}/teoweetin/preview/" \
+            --destination public/teoweetin/preview
           cp root/index.html public/index.html
           cp public/teoweetin/404.html public/404.html 2>/dev/null || true
       - uses: actions/upload-pages-artifact@v3

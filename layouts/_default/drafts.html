@@ -1,0 +1,13 @@
+{{ define "main" }}
+<header class="page-head">
+  <p class="eyebrow mono">Preview only</p>
+  <h1>{{ .Title }}</h1>
+  <div class="lead">{{ .Content }}</div>
+</header>
+{{ $drafts := where (where site.RegularPages "Draft" true) "Layout" "ne" "drafts" }}
+{{ if $drafts }}
+  <div class="grid">{{ range $drafts.ByDate.Reverse }}{{ partial "card.html" . }}{{ end }}</div>
+{{ else }}
+  <div class="panel empty"><p class="mono">No drafts right now.</p></div>
+{{ end }}
+{{ end }}
