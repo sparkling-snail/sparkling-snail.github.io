@@ -1,7 +1,7 @@
 ---
 title: "Where p99 comes from in LLM serving"
 date: 2026-10-05
-draft: true
+draft: false
 tags: ["inference", "tail-latency", "scheduling", "vllm"]
 summary: "Average latency hides the tail. Four experiments, one of them on my own continuous-batching engine, to find where LLM serving p99 actually comes from."
 glyph: "p99"
@@ -64,7 +64,7 @@ Two more things the data showed that I didn't go looking for:
 
 Queueing theory says latency doesn't degrade linearly with load. It's flat, then it bends, then it explodes, and the tail bends first.
 
-> **TODO (GPU run):** `exp1_load_cliff.png` + numbers. Sweep 1 → 24 req/s on vLLM, Qwen2.5-1.5B, one GPU. Report: the rate where p99 TTFT crosses 2× its low-load value vs the rate where throughput peaks.
+> **GPU results coming soon.** The harness for this one is in the repo (`experiments/tail/exp1_load_sweep.py`): a 1 → 24 req/s sweep on vLLM with Qwen2.5-1.5B on one GPU. I'll add the chart and numbers here once it's run.
 
 The practical lesson for capacity planning: plan at the **p99 knee**, not at peak throughput. A server that's "only" at 70% of its maximum tokens/s can already be breaking a TTFT SLO.
 
@@ -74,7 +74,7 @@ Prefill (processing a prompt) and decode (generating tokens) share the same GPU 
 
 vLLM now always splits prefill into chunks, and `--max-num-batched-tokens` sets how many tokens (decode + prefill) one iteration may process. I run 16 background streams, inject three ~8k-token prompts, and compare a 512-token budget against a 16k one.
 
-> **TODO (GPU run):** `exp2_prefill_stall.png` + numbers: worst background gap and long-prompt TTFT for budget-512 vs budget-16384.
+> **GPU results coming soon.** Harness: `experiments/tail/exp2_prefill_stall.py`, comparing a 512-token budget against 16,384.
 
 What to expect: a large budget lets the whole prompt prefill in one long iteration, so every stream freezes once. A small budget spreads it out: no big freeze, but the long prompt's own TTFT grows. **It's a tradeoff, not a free win**, and the right setting depends on whether your SLO is on TTFT or ITL. DistServe takes this to its logical end by running prefill and decode on different GPUs, reporting up to 7.4× more requests served within SLO ([Zhong et al., OSDI '24](https://arxiv.org/abs/2401.09670)).
 
@@ -82,7 +82,7 @@ What to expect: a large budget lets the whole prompt prefill in one long iterati
 
 Every running request keeps its KV cache in GPU memory. When the cache is full, vLLM *preempts* a running request: frees its memory and recomputes it later ([vLLM docs](https://docs.vllm.ai/en/v0.8.5/performance/optimization.html)). The unlucky request pays for its prefill twice and loses its place in line.
 
-> **TODO (GPU run):** `exp3_kv_pressure.png` + numbers: preemptions and p50/p99 E2E at 8192 / 2048 / 1024 / 512 KV blocks.
+> **GPU results coming soon.** Harness: `experiments/tail/exp3_kv_pressure.py`, shrinking the KV cache from 8,192 to 512 blocks.
 
 The dangerous part, operationally: throughput can look fine while this happens. The average request is unaffected, so the only symptom is p99 E2E climbing and a counter most dashboards don't plot.
 
@@ -104,5 +104,5 @@ Other real sources of p99 that are out of scope here: CPU overhead (vLLM's own p
 
 - **Engine (Exp 4):** my [mini inference server](/projects/mini-inference-server/), Phase 4 continuous-batching scheduler, max batch size 4, greedy decoding, output length fixed (EOS ignored). Model: GPT-2-small architecture (124M parameters, 12 layers, 768 hidden) on CPU, ~50 ms per decode step at batch 4. <!-- TODO: if you rerun on your Mac with real gpt2 weights, update this line and the numbers above. The run in this draft used randomly initialised weights with GPT-2's exact architecture on a 2-vCPU cloud machine; latency depends on shapes, not weight values, so the scheduling behaviour is the same. -->
 - **Arrivals:** open-loop Poisson. A closed-loop benchmark (N clients that wait for a reply before sending again) slows down when the server does, which hides exactly the queueing tail being measured.
-- **Exp 1-3:** vLLM, Qwen2.5-1.5B-Instruct, one <!-- TODO GPU model --> GPU.
+- **Exp 1-3:** vLLM, Qwen2.5-1.5B-Instruct, one GPU (results pending).
 - Code, raw per-request JSON, and the scripts that draw every chart are in the repo under `experiments/tail/`.
