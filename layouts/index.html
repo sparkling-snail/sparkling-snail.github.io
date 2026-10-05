@@ -19,7 +19,7 @@
     <p class="mono muted stagger" style="--i:4">By day I'm an SRE on ML Platform at ByteDance/TikTok in Singapore. After hours I write about batching, KV caches, schedulers and routing (what works, what breaks, and the numbers), and build things just for fun.</p>
     <div class="hero-actions stagger" style="--i:5">
       <a class="btn btn--gradient" href="{{ "projects/" | relURL }}">See my projects</a>
-      {{ with site.Params.resume }}<a class="btn btn--ghost" href="{{ . | relURL }}">Résumé</a>{{ else }}<a class="btn btn--ghost" href="{{ "about/" | relURL }}">About me</a>{{ end }}
+      {{ with site.Params.resume }}<a class="btn btn--ghost" href="{{ . | relURL }}">Résumé</a>{{ else }}<a class="btn btn--ghost" href="{{ "experience/" | relURL }}">Experience</a>{{ end }}
       {{ partial "socials.html" . }}
     </div>
   </div>

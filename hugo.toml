@@ -31,10 +31,6 @@ capitalizeListTitles = false
     name = "Writing"
     pageRef = "/posts"
     weight = 20
-  [[menus.main]]
-    name = "About"
-    pageRef = "/about"
-    weight = 30
 
 [markup]
   [markup.highlight]
