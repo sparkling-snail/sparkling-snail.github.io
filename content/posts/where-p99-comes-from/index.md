@@ -1,6 +1,6 @@
 ---
 title: "Where p99 comes from in LLM serving"
-date: 2026-10-05
+date: 2026-07-14
 draft: false
 tags: ["inference", "tail-latency", "scheduling", "vllm"]
 summary: "Average latency hides the tail. Four experiments, one of them on my own continuous-batching engine, to find where LLM serving p99 actually comes from."
@@ -19,7 +19,7 @@ DRAFT STATUS
 
 Training is a one-time cost. Inference is a cost you pay on every request, forever. And because a model can't write its fifth token until it has committed to its fourth, every request occupies the GPU for as long as its output is long. Some requests are short, some are very long, and they all share the same hardware. That's where the tail comes from.
 
-I run GPU model serving for a living, so I'm used to looking at p99 dashboards. What I wanted to know was *why* LLM serving tails look the way they do, so I tried to reproduce each cause on purpose. The short version: p99 isn't noise. It comes from a handful of mechanisms, each of which leaves a different fingerprint.
+I've stared at my fair share of p99 charts, but I realised I couldn't actually explain *why* LLM serving tails look the way they do. So I tried to reproduce each cause on purpose and see what happens. The short version: p99 isn't noise. It comes from a handful of mechanisms, each of which leaves a different fingerprint.
 
 ## First: p99 of *what*?
 
@@ -98,7 +98,7 @@ If I were putting an LLM endpoint behind an SLO tomorrow, this is what I'd watch
 
 ## What I didn't test
 
-Other real sources of p99 that are out of scope here: CPU overhead (vLLM's own profiling found only 38% of time on the GPU in one setup, [vLLM blog](https://vllm.ai/blog/2024-09-05-perf-update)); cold starts and CUDA-graph capture; and routing (I covered the classic load-balancing side in [the power of two choices](/posts/power-of-two-choices/)). Routing that ignores the KV cache is especially costly: llm-d measured p90 TTFT of 0.54 s with cache-aware routing versus 92 s with random routing ([llm-d](https://llm-d.ai/blog/kvcache-wins-you-can-see)). Cache-aware routing is what I'm building next: [a KV-cache-aware router in front of several vLLM instances](/projects/kv-cache-aware-router/).
+Other real sources of p99 that are out of scope here: CPU overhead (vLLM's own profiling found only 38% of time on the GPU in one setup, [vLLM blog](https://vllm.ai/blog/2024-09-05-perf-update)); cold starts and CUDA-graph capture; and routing (I wrote about the classic load-balancing side separately, in [the power of two choices](/posts/power-of-two-choices/)). Routing that ignores the KV cache is especially costly: llm-d measured p90 TTFT of 0.54 s with cache-aware routing versus 92 s with random routing ([llm-d](https://llm-d.ai/blog/kvcache-wins-you-can-see)). Cache-aware routing is what I'm building next: [a KV-cache-aware router in front of several vLLM instances](/projects/kv-cache-aware-router/).
 
 ## How I measured
 

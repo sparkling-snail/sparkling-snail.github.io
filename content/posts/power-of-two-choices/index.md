@@ -1,6 +1,6 @@
 ---
 title: "The Power of Two Choices: Why Checking Two Servers Beats Checking One"
-date: 2026-10-05
+date: 2026-09-02
 draft: false
 tags: ["load-balancing", "distributed-systems", "sre", "llm-serving"]
 summary: "Pick two servers at random, send the request to the less busy one. That's it. That's the whole trick. It shrinks the worst hotspot exponentially, and I have charts to prove it."
