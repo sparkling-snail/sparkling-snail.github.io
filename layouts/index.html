@@ -6,15 +6,15 @@
     </div>
     <div class="terminal mono" aria-hidden="true">
       <div class="terminal-bar"><span></span><span></span><span></span></div>
-      <p><span class="prompt">$</span> kubectl get gpus --all-regions</p>
-      <p class="muted">~8,500 GPU servers · 99.95% SLA</p>
-      <p><span class="prompt">$</span> python serve.py --continuous-batching</p>
-      <p class="ok">✓ scheduler ready<span class="caret"></span></p>
+      <p><span class="prompt">$</span> whoami</p>
+      <p class="muted">wee tin · SRE, ML platform</p>
+      <p><span class="prompt">$</span> cat interests.txt</p>
+      <p class="ok">inference · reliability · GPUs<span class="caret"></span></p>
     </div>
   </div>
   <div class="hero-text">
     <p class="eyebrow mono stagger" style="--i:1">{{ site.Params.role }}</p>
-    <h1 class="stagger" style="--i:2">Hi! I'm Wee <span class="wave">👋</span></h1>
+    <h1 class="stagger" style="--i:2">Hi! I'm Wee Tin <span class="wave">👋</span></h1>
     <p class="lead stagger" style="--i:3">I keep GPU model serving reliable at scale, and build inference engines from scratch to understand them properly.</p>
     <p class="mono muted stagger" style="--i:4">By day I'm an SRE on ML Platform at ByteDance/TikTok in Singapore. On the side I write about batching, KV caches, schedulers and routing: what works, what breaks, and the numbers.</p>
     <div class="hero-actions stagger" style="--i:5">
@@ -56,7 +56,7 @@
     <div class="grid">{{ range first 4 $posts }}{{ partial "card.html" . }}{{ end }}</div>
   {{ else }}
     <div class="panel empty reveal">
-      <p class="mono">First posts are on the way: building continuous batching from scratch, and what running 8,500 GPUs teaches you about inference reliability.</p>
+      <p class="mono">First posts are on the way: building continuous batching from scratch, and what running GPUs at scale teaches you about inference reliability.</p>
       <a class="btn btn--ghost" href="{{ "posts/index.xml" | relURL }}">Follow via RSS</a>
     </div>
   {{ end }}

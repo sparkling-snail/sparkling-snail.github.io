@@ -14,20 +14,6 @@ capitalizeListTitles = false
   resume = ""     # e.g. "resume.pdf" (put the file in static/)
   avatar = ""     # e.g. "images/avatar.jpg" (put the file in static/images/). Initials are shown if empty.
 
-  # Numbers shown in the highlights row on the homepage
-  [[params.highlights]]
-    value = "8.5k"
-    label = "GPU servers in production"
-  [[params.highlights]]
-    value = "99.95%"
-    label = "serving SLA"
-  [[params.highlights]]
-    value = "10+"
-    label = "business units supported"
-  [[params.highlights]]
-    value = "0 → 1"
-    label = "continuous batching, from scratch"
-
 [menus]
   [[menus.main]]
     name = "Home"
