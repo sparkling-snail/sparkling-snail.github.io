@@ -24,6 +24,10 @@ capitalizeListTitles = false
     pageRef = "/projects"
     weight = 10
   [[menus.main]]
+    name = "Experience"
+    pageRef = "/experience"
+    weight = 15
+  [[menus.main]]
     name = "Writing"
     pageRef = "/posts"
     weight = 20

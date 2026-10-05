@@ -1,0 +1,44 @@
+{{ define "main" }}
+<header class="page-head">
+  <p class="eyebrow mono stagger" style="--i:0">{{ site.Title }}</p>
+  <h1 class="stagger" style="--i:1">{{ .Title }}</h1>
+  {{ with .Params.summary }}<p class="lead stagger" style="--i:2">{{ . }}</p>{{ end }}
+  {{ with site.Params.resume }}<a class="btn btn--gradient btn--sm stagger" style="--i:3" href="{{ . | relURL }}" target="_blank" rel="noopener">Download résumé →</a>{{ end }}
+</header>
+
+<ol class="timeline">
+  {{ range $i, $r := .Params.roles }}
+  <li class="timeline-item panel reveal" style="--d:{{ $i }}">
+    <div class="timeline-head">
+      <div>
+        <h3>{{ $r.title }}</h3>
+        <p class="timeline-org">{{ $r.company }}{{ with $r.location }} <span class="muted">· {{ . }}</span>{{ end }}</p>
+      </div>
+      <span class="timeline-dates mono small">{{ $r.dates }}</span>
+    </div>
+    {{ with $r.points }}<ul class="timeline-points">{{ range . }}<li>{{ . | markdownify }}</li>{{ end }}</ul>{{ end }}
+  </li>
+  {{ end }}
+</ol>
+
+{{ with .Params.education }}
+<section class="section">
+  <p class="eyebrow mono">Education</p>
+  <ol class="timeline">
+    {{ range $i, $e := . }}
+    <li class="timeline-item panel reveal" style="--d:{{ $i }}">
+      <div class="timeline-head">
+        <div>
+          <h3>{{ $e.degree }}</h3>
+          <p class="timeline-org">{{ $e.school }}</p>
+        </div>
+        <span class="timeline-dates mono small">{{ $e.dates }}</span>
+      </div>
+    </li>
+    {{ end }}
+  </ol>
+</section>
+{{ end }}
+
+{{ with .Content }}<div class="prose">{{ . }}</div>{{ end }}
+{{ end }}

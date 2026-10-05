@@ -285,6 +285,21 @@ pre { background: #0b1020 !important; border: 1px solid var(--border); padding: 
 pre code { background: none; padding: 0; color: #d6deeb; }
 pre.mermaid { background: var(--bg-alt) !important; text-align: center; }
 
+/* Experience timeline */
+.timeline { list-style: none; margin: 0; padding: 0 0 0 28px; position: relative; max-width: 860px; }
+.timeline::before { content: ""; position: absolute; left: 7px; top: 10px; bottom: 10px; width: 2px; border-radius: 2px; background: var(--gradient); opacity: .5; }
+.timeline-item { position: relative; padding: 22px 24px; margin-bottom: 18px; transition: transform .25s var(--ease), border-color .25s; }
+.timeline-item:hover { transform: translateY(-3px); border-color: var(--accent); }
+.timeline-item::before { content: ""; position: absolute; left: -27px; top: 28px; width: 14px; height: 14px; border-radius: 50%; background: var(--gradient); box-shadow: 0 0 0 4px var(--bg); }
+.timeline-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 16px; }
+.timeline-head h3 { margin: 0; }
+.timeline-org { margin: 2px 0 0; font-weight: 500; color: var(--text-strong); }
+.timeline-dates { color: var(--muted); white-space: nowrap; }
+.timeline-points { margin: 12px 0 0; padding-left: 1.2em; }
+.timeline-points li { margin: 0.3em 0; }
+.timeline-points li::marker { color: var(--accent); }
+.section > .eyebrow { margin-bottom: 16px; }
+
 .article-nav { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 56px; }
 .article-nav a { display: flex; flex-direction: column; gap: 4px; padding: 16px 20px; font-weight: 600; transition: transform .25s var(--ease), border-color .25s; }
 .article-nav a:hover { transform: translateY(-3px); border-color: var(--accent); color: var(--text-strong); }
@@ -355,6 +370,10 @@ pre.mermaid { background: var(--bg-alt) !important; text-align: center; }
   .stat { padding: 16px; }
   .stat-value { font-size: 1.5rem; }
   .article-nav { grid-template-columns: 1fr; }
+  .timeline { padding-left: 22px; }
+  .timeline-item { padding: 18px; }
+  .timeline-item::before { left: -21px; }
+  .timeline::before { left: 4px; }
   .footer-grid { grid-template-columns: 1fr; }
 }
 
