@@ -6,7 +6,7 @@ at random and send it to the least-loaded one (d = 1 is plain random routing).
 Report the load on the busiest server, and the fraction of servers carrying
 at least i requests.
 
-Usage:  python3 simulate.py          (writes results.json + two PNG charts)
+Usage:  python3 simulate.py          (writes results.json; run plot.py for the charts)
 Needs:  numpy, matplotlib
 """
 import json
