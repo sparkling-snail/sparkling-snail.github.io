@@ -161,10 +161,6 @@ A note first: I am not a load-balancing researcher. These are my notes as someon
 
 Next, I am building a KV-cache-aware router in Go in front of several vLLM instances. In a follow-up post, I will compare round-robin, random and two choices on real inference traffic, with TTFT and throughput numbers.
 
-## Try it yourself
-
-The simulation is a short Python script using NumPy: [`simulate.py`](simulate.py). The million-server run takes about 15 seconds.
-
 ## References
 
 - M. Mitzenmacher. [The Power of Two Choices in Randomized Load Balancing](https://www.eecs.harvard.edu/~michaelm/postscripts/tpds2001.pdf). *IEEE Transactions on Parallel and Distributed Systems*, 12(10), 2001.
