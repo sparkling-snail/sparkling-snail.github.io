@@ -1,0 +1,32 @@
+{
+  "setup": "1x A100-SXM4-40GB, k3s v1.36.5, vLLM 0.31.0, Qwen2.5-3B-Instruct bf16, 512 in / 128 out tokens",
+  "saturation_total_out_tok_s": {
+    "Whole card": 3704,
+    "Time-slicing": 2330,
+    "MIG 3g+3g": 2768,
+    "HAMi": 2303
+  },
+  "model_a_tpot_p50_ms": [
+    {
+      "mode": "Time-slicing",
+      "quiet": 7.06,
+      "noisy": 18.3
+    },
+    {
+      "mode": "MIG 3g+3g",
+      "quiet": 11.8,
+      "noisy": 11.7
+    },
+    {
+      "mode": "HAMi",
+      "quiet": 7.07,
+      "noisy": 18.1
+    }
+  ],
+  "whole_card_tpot_p50_ms": 7.05,
+  "hami_eager_tpot_p50_ms": {
+    "quiet": 26.2,
+    "noisy": 26.2,
+    "note": "--enforce-eager; see post for caveat"
+  }
+}
