@@ -11,18 +11,34 @@ Two small models, one GPU. Sharing the card looks like free money, until one of 
 
 I set up exactly that: model-a serving a steady 4 requests per second, model-b sharing the same A100. Then I pushed model-b to 64 requests in flight. With time-slicing, **every token model-a generated took 2.6× longer**, even though model-a's own traffic didn't change at all. With MIG, model-a's latency didn't move.
 
-This post covers what each way of sharing a GPU actually costs, why only one of them isolates tenants, and why HAMi's compute limit has no effect on a vLLM server.
+This post explains how each way of sharing a GPU actually splits the card, what each one costs, why only one of them isolates tenants, and why HAMi's compute limit has no effect on a vLLM server.
+
+## Four ways to share one GPU
+
+A GPU has two things worth sharing: **compute**, the 108 streaming multiprocessors (SMs) that run kernels, and **memory**, 40 GB on this card plus the bandwidth to read it. The four modes differ in how they split each one, and in *who enforces the split*.
+
+![How each mode splits one A100 between two tenants: whole card gives one tenant everything; time-slicing alternates the two on the whole GPU with no memory limits; MIG cuts the card into two hardware slices of 42 SMs and 20 GB each, leaving 24 SMs unused; HAMi time-slices like time-slicing but adds software quotas of 19 GB memory and 50% compute per tenant](modes.png)
+
+**Whole card.** No sharing. NVIDIA's device plugin tells Kubernetes the node has `nvidia.com/gpu: 1`, one pod claims it, and that pod owns every SM and every byte. It's the baseline everything else is measured against.
+
+**Time-slicing.** The device plugin is configured to advertise the one card as two, so Kubernetes happily schedules two pods onto it. That's all it does. On the GPU, the driver runs one process's kernels at a time and switches between them every few milliseconds. Nothing limits memory: each process sees the full 40 GB and can take as much as it wants, which is why I had to split vLLM's `--gpu-memory-utilization` by hand, 0.45 each.
+
+**MIG (Multi-Instance GPU).** On A100- and H100-class cards, the hardware itself can be cut into up to seven isolated instances. Each has its own SMs, its own memory, and its own share of memory bandwidth and cache. To software, each slice looks like a smaller, separate GPU, requested as `nvidia.com/mig-3g.20gb`. The catches: slices come in fixed sizes, changing the layout means draining the card, and two 3g slices leave 24 of the 108 SMs unused.
+
+**HAMi.** An open-source CNCF project that adds fractional GPUs to Kubernetes. Pods ask for a share (`gpumem: 19000`, `gpucores: 50`) and HAMi's scheduler packs them onto cards. Enforcement happens inside each container: HAMi injects a shim library, `libvgpu.so`, between the program and the CUDA driver. It answers "how much memory is there?" with the pod's quota, refuses allocations past it, and pauses kernel launches when the pod goes over its compute share. Underneath, the GPU is still being time-sliced.
+
+That last distinction matters most for what follows. MIG's limits are enforced **by the hardware**, outside the tenant's process. HAMi's are enforced **in software, inside the tenant's own process**, so they only cover the calls the shim intercepts. Time-slicing enforces nothing at all.
 
 ## The setup
 
 I used one A100-SXM4-40GB rented from Lambda (about $1.50/hr) running single-node Kubernetes (k3s) and NVIDIA's device plugin. The model server was vLLM 0.31 with Qwen2.5-3B-Instruct. I picked a 3B model so that two copies fit comfortably in half of a 40 GB card. Every mode except the baseline runs two replicas on the same GPU.
 
-| Mode | What each pod asks Kubernetes for | What enforces the split |
-| --- | --- | --- |
-| Whole card | `nvidia.com/gpu: 1` | Nothing: one tenant |
-| Time-slicing | `nvidia.com/gpu: 1` (the plugin advertises the card twice) | The driver takes turns. No memory limit. |
-| MIG, 2× 3g.20gb | `nvidia.com/mig-3g.20gb: 1` | Hardware: 42 SMs and 20 GB per slice |
-| HAMi | `nvidia.com/gpu: 1`, `gpumem: 19000`, `gpucores: 50` | A shim library inside the container |
+| Mode | What each pod asks Kubernetes for |
+| --- | --- |
+| Whole card | `nvidia.com/gpu: 1` |
+| Time-slicing | `nvidia.com/gpu: 1` (the plugin advertises the card twice) |
+| MIG, 2× 3g.20gb | `nvidia.com/mig-3g.20gb: 1` |
+| HAMi | `nvidia.com/gpu: 1`, `nvidia.com/gpumem: 19000`, `nvidia.com/gpucores: 50` |
 
 I ran three tests with `vllm bench serve`, each request using 512 input and 128 output tokens:
 
@@ -109,7 +125,7 @@ Others have compared these modes. [NVIDIA's consolidation post](https://develope
 
 Each number comes from a single run, with one 3B model on one A100-40GB. Bigger models, H100s and other servers will move the numbers. I didn't record the HAMi chart version, didn't run an eager whole-card baseline, and didn't test MPS. The *shape* is what I'd expect to transfer: time-slicing and soft limits share everything, so a busy neighbour costs you; MIG shares nothing, so it can't.
 
-The whole thing took about 2.5 hours of GPU time, roughly $5. `results.json` and `plot.py` sit next to this post in the site's repo.
+The whole thing took about 2.5 hours of GPU time, roughly $5. `results.json`, `plot.py` and `diagram.py` sit next to this post in the site's repo.
 
 ## Sources
 
