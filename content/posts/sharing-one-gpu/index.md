@@ -17,6 +17,15 @@ This post explains how each way of sharing a GPU actually splits the card, what 
 
 My day job is running GPU model-serving infrastructure, and the most common waste I see is a small model sitting alone on a whole GPU, using a fraction of its memory and compute. Every GPU-sharing technology promises to fix that: pack several models onto one card and get the idle capacity back.
 
+The waste is easy to miss, because the usual metric hides it. `nvidia-smi`'s **GPU-Util** only measures the share of time *at least one kernel* was running. A kernel on 1 of 108 SMs counts as 100%. A small model on light traffic can show 90% GPU-Util while DCGM's **SM Activity** (`DCGM_FI_PROF_SM_ACTIVE`, the share of SMs actually doing work) is low and most of the memory sits empty. The sharing modes go after different parts of that waste:
+
+- Time-slicing and HAMi fill **idle time**. When one tenant has no requests, the other gets the card. Their kernels never run at the same moment, though.
+- MIG gives each small model a **smaller GPU** that it can keep busy.
+- MPS, which I didn't test, fills **idle SMs at the same moment**.
+- All of them fill **memory**: a 3B model needs about 7 GB of weights, and the rest of a 40 GB card is stranded.
+
+The benefit is capacity, not speed: fewer GPUs for the same set of low-traffic models.
+
 What the docs don't tell you is what sharing costs the tenants. The question that decides whether you can put production traffic on a shared card is simple: **when my neighbour gets busy, does my latency change?** I couldn't find anyone who had measured that on a real LLM serving stack, so I rented a GPU for an afternoon and measured it myself.
 
 ## Four ways to share one GPU
