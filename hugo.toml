@@ -6,8 +6,8 @@ capitalizeListTitles = false
 
 [params]
   name = "Teo Wee Tin"
-  role = "Site Reliability Engineer · GPU inference"
-  description = "SRE on GPU model serving at scale. Building inference engines from scratch on the side."
+  role = "AI engineer · LLM serving and agents"
+  description = "AI engineer working across the stack: LLM serving infrastructure and the agents built on top of it. SRE on GPU model serving at ByteDance/TikTok."
   github = "https://github.com/sparkling-snail"
   linkedin = ""   # e.g. "https://www.linkedin.com/in/your-handle"
   email = ""      # optional public email

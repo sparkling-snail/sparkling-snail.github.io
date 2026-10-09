@@ -7,16 +7,16 @@
     <div class="terminal mono" aria-hidden="true">
       <div class="terminal-bar"><span></span><span></span><span></span></div>
       <p><span class="prompt">$</span> whoami</p>
-      <p class="muted">wee tin · SRE, ML platform</p>
+      <p class="muted">wee tin · AI infra + agents</p>
       <p><span class="prompt">$</span> cat interests.txt</p>
-      <p class="ok">inference · reliability · GPUs · cats 🐈<span class="caret"></span></p>
+      <p class="ok">inference · agents · GPUs · cats 🐈<span class="caret"></span></p>
     </div>
   </div>
   <div class="hero-text">
     <p class="eyebrow mono stagger" style="--i:1">{{ site.Params.role }}</p>
     <h1 class="stagger" style="--i:2">Hi! I'm Wee Tin <span class="wave">👋</span></h1>
-    <p class="lead stagger" style="--i:3">I keep GPU model serving reliable at scale, and build inference engines from scratch to understand them properly.</p>
-    <p class="mono muted stagger" style="--i:4">By day I'm an SRE on ML Platform at ByteDance/TikTok in Singapore. After hours I write about batching, KV caches, schedulers and routing (what works, what breaks, and the numbers), and build things just for fun.</p>
+    <p class="lead stagger" style="--i:3">I build AI systems from the GPU up: the infrastructure that serves models fast and reliably, and the agents that put them to work.</p>
+    <p class="mono muted stagger" style="--i:4">By day I'm an SRE on ML Platform at ByteDance/TikTok in Singapore, keeping GPU model serving reliable at scale. After hours I build the rest of the stack myself: an inference engine with continuous batching, a cache-aware router for vLLM, and a team of Claude agents that use real tools over MCP. Then I write up what worked, what broke, and the numbers.</p>
     <div class="hero-actions stagger" style="--i:5">
       <a class="btn btn--gradient" href="{{ "projects/" | relURL }}">See my projects</a>
       {{ with site.Params.resume }}<a class="btn btn--ghost" href="{{ . | relURL }}">Résumé</a>{{ else }}<a class="btn btn--ghost" href="{{ "experience/" | relURL }}">Experience</a>{{ end }}
