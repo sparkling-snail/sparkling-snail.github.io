@@ -13,6 +13,12 @@ I set up exactly that: model-a serving a steady 4 requests per second, model-b s
 
 This post explains how each way of sharing a GPU actually splits the card, what each one costs, why only one of them isolates tenants, and why HAMi's compute limit has no effect on a vLLM server.
 
+## Why I tried this
+
+My day job is running GPU model-serving infrastructure, and the most common waste I see is a small model sitting alone on a whole GPU, using a fraction of its memory and compute. Every GPU-sharing technology promises to fix that: pack several models onto one card and get the idle capacity back.
+
+What the docs don't tell you is what sharing costs the tenants. The question that decides whether you can put production traffic on a shared card is simple: **when my neighbour gets busy, does my latency change?** I couldn't find anyone who had measured that on a real LLM serving stack, so I rented a GPU for an afternoon and measured it myself.
+
 ## Four ways to share one GPU
 
 A GPU has two things worth sharing: **compute**, the 108 streaming multiprocessors (SMs) that run kernels, and **memory**, 40 GB on this card plus the bandwidth to read it. The four modes differ in how they split each one, and in *who enforces the split*.
@@ -121,9 +127,19 @@ One setup note: with MIG enabled, the plain device-plugin chart crashed with `In
 
 Others have compared these modes. [NVIDIA's consolidation post](https://developer.nvidia.com/blog/maximize-ai-infrastructure-throughput-by-consolidating-underutilized-gpu-workloads/) compares time-slicing and MIG on throughput and mean latency but argues isolation from the architecture rather than measuring it. [GPU-Virt-Bench](https://arxiv.org/abs/2512.22125) benchmarks HAMi-core with synthetic kernels, which wouldn't hit the CUDA-graph path. What I wanted was the tail-latency view on a real serving stack.
 
+## What I'd try next: MPS, DRA and NVIDIA vGPU
+
+Three things I left out are worth knowing about, because each fixes a different weakness above.
+
+**MPS (Multi-Process Service).** Instead of taking turns, MPS lets kernels from several processes run on the GPU at the same time, and it can cap each client's memory and compute. On paper it sits between time-slicing and MIG: concurrent like MIG, flexibly sized like HAMi, and enforced by an NVIDIA daemon rather than a shim inside your process. NVIDIA's device plugin supports it, but [calls the support experimental and doesn't allow it on MIG-enabled GPUs](https://github.com/NVIDIA/k8s-device-plugin). It's the obvious fifth column for this benchmark. The question is whether it gets the throughput back without bringing the noisy neighbour with it.
+
+**DRA (Dynamic Resource Allocation).** Kubernetes is replacing the device plugin's "give me N GPUs" with richer resource claims, enabled by default from Kubernetes 1.34. NVIDIA's [DRA driver](https://dra-driver-nvidia-gpu.sigs.k8s.io/docs/concepts/gpu-allocation/) can share a GPU between claims with time-slicing or MPS. Behind its `DynamicMIG` feature gate, it creates a MIG slice when a pod starts and tears it down when the pod finishes. That would remove MIG's biggest operational pain: re-partitioning nodes by hand and draining them to do it.
+
+**NVIDIA vGPU.** Despite HAMi's library being called `libvgpu.so`, NVIDIA vGPU is a different, licensed product, and it's for **virtual machines**. A host driver splits the card, either time-sliced or MIG-backed, and each VM runs its own guest driver. On Kubernetes it runs through KubeVirt, and [the GPU Operator dedicates each node to either containers or vGPU VMs, not both](https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/latest/gpu-operator-kubevirt.html). It's the right tool when tenants need VM-level isolation, not for packing pods.
+
 ## What this doesn't show
 
-Each number comes from a single run, with one 3B model on one A100-40GB. Bigger models, H100s and other servers will move the numbers. I didn't record the HAMi chart version, didn't run an eager whole-card baseline, and didn't test MPS. The *shape* is what I'd expect to transfer: time-slicing and soft limits share everything, so a busy neighbour costs you; MIG shares nothing, so it can't.
+Each number comes from a single run, with one 3B model on one A100-40GB. Bigger models, H100s and other servers will move the numbers. I didn't record the HAMi chart version or run an eager whole-card baseline. The *shape* is what I'd expect to transfer: time-slicing and soft limits share everything, so a busy neighbour costs you; MIG shares nothing, so it can't.
 
 The whole thing took about 2.5 hours of GPU time, roughly $5. `results.json`, `plot.py` and `diagram.py` sit next to this post in the site's repo.
 
@@ -134,4 +150,7 @@ The whole thing took about 2.5 hours of GPU time, roughly $5. `results.json`, `p
 - HAMi-core source, [Project-HAMi/HAMi-core](https://github.com/Project-HAMi/HAMi-core) (`src/cuda/memory.c`, `src/cuda/graph.c`)
 - vLLM forum, [2 vLLM containers on a single GPU](https://discuss.vllm.ai/t/2-vllm-containers-on-a-single-gpu/608)
 - NVIDIA, [Maximize AI infrastructure throughput by consolidating underutilized GPU workloads](https://developer.nvidia.com/blog/maximize-ai-infrastructure-throughput-by-consolidating-underutilized-gpu-workloads/)
+- NVIDIA, [k8s-device-plugin README: sharing with time-slicing and MPS](https://github.com/NVIDIA/k8s-device-plugin)
+- Kubernetes SIGs, [DRA Driver for NVIDIA GPUs: GPU allocation](https://dra-driver-nvidia-gpu.sigs.k8s.io/docs/concepts/gpu-allocation/)
+- NVIDIA, [GPU Operator with KubeVirt (vGPU)](https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/latest/gpu-operator-kubevirt.html)
 - Jithin VG and Ditto PS, [GPU-Virt-Bench: A Comprehensive Benchmarking Framework](https://arxiv.org/abs/2512.22125)
