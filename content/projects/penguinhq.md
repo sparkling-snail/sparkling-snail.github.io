@@ -30,13 +30,32 @@ Four agents run around the clock. Each has its own desk, its own tools and its o
 When one agent hands work to another, a messenger pigeon flies across the room. The pigeon only takes off after the task has been saved to the database, so what you see on screen is always real.
 
 ```mermaid
-flowchart LR
-    B[Browser<br/>Next.js] <-->|REST + WebSocket| A[FastAPI]
-    A --> P[(PostgreSQL)]
-    A <--> R[(Redis pub/sub)]
-    AR[Agent runner<br/>4 asyncio agents] <-->|HTTP + WebSocket| A
-    AR --> C[Claude API]
-    AR --> M[MCP servers<br/>Apify, Tavily]
+flowchart TB
+    subgraph client["Client"]
+        UI["Office UI · Next.js"]
+    end
+
+    subgraph backend["Backend"]
+        API["API service · FastAPI"]
+        PG[("PostgreSQL<br/>memory · facts · tasks")]
+        RD[("Redis<br/>event fan-out")]
+        API --> PG
+        API <--> RD
+    end
+
+    subgraph runtime["Agent runtime"]
+        RUN["4 agent loops · asyncio<br/>in-process task bus"]
+    end
+
+    subgraph external["External services"]
+        LLM["Claude API"]
+        MCP["MCP servers<br/>Apify · Tavily"]
+    end
+
+    UI <-->|REST · WebSocket| API
+    API <-->|HTTP · WebSocket| RUN
+    RUN -->|model calls| LLM
+    RUN -->|tool calls| MCP
 ```
 
 ### The agent design
