@@ -5,8 +5,7 @@ glyph: "🐧"
 weight: 5
 tags: ["ai-agents", "mcp", "fastapi", "nextjs", "websockets"]
 image: "images/projects/penguinhq-office.jpg"
-demo: "https://penguinhq.vercel.app"
-repo: ""
+repo: "https://github.com/sparkling-snail/penguinhq"
 ---
 
 ## Problem
@@ -47,13 +46,12 @@ Under the hood:
 
 **Stack:** Next.js, React, TypeScript, Zustand, FastAPI, SQLAlchemy, PostgreSQL, Redis, the Claude API, MCP, Docker Compose and GitHub Actions.
 
-The [live demo](https://penguinhq.vercel.app) is a read-only showcase with sample data. No live agents, no API keys and no write endpoints are exposed; the real backend stays private.
+The full source is on [GitHub](https://github.com/sparkling-snail/penguinhq).
 
 ## What I learned
 
 - **Save first, animate second.** It's easy to build a demo where the animation works even though nothing was recorded. So every hand-off is written to the database first, and the pigeon carries that same task ID.
 - **Paid tools should fail gracefully.** If an API key is missing, only that agent's ability switches off, not the whole office.
-- **A public demo deserves its own mode.** Instead of trying to make the real backend "mostly read-only", the demo is a separate build with sample data and every write switched off. That's much easier to trust.
 
 ## What's next
 
