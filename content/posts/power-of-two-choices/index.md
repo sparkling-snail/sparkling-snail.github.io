@@ -129,7 +129,48 @@ For LLM serving, the algorithm itself still works. The difficulty is deciding wh
 
 **Request count is a poor load signal for LLMs.** One request might be a 50-token greeting. Another might be a 30,000-token context that keeps generating for a full minute. Two replicas with 8 in-flight requests each can be doing very different amounts of work. It is like judging a kopi stall queue by the number of people, when one person wants a single kopi and the next is buying for the whole office. From what I have read, better signals include queued and running tokens, KV-cache utilisation, or an estimate of time-to-first-token.
 
-**Cache locality competes with balance.** If a replica already holds a prompt's prefix in its KV cache, sending the request there saves a lot of prefill work. Prefix-aware routers usually prefer cache-warm replicas first, and fall back to load-based choice when that would create a hotspot. Two choices works well as that fallback.
+**Cache locality competes with balance.** If a replica already holds a prompt's prefix in its KV cache, sending the request there saves a lot of prefill work. Prefix-aware routers usually prefer cache-warm replicas first, and fall back to load-based choice when that would create a hotspot.
+
+## Trying it on a router
+
+After writing the sections above, I built [kvrouter](https://github.com/sparkling-snail/kvrouter), a small Go router that sits in front of several vLLM-style servers. I added `random` and `p2c` (two choices) policies to it, so I could compare them with what the router already had:
+
+- **round_robin**: take turns.
+- **random**: one random choice.
+- **p2c**: two random choices, pick the one with fewer in-flight requests.
+- **least_loaded**: check every server and pick the one with the fewest in-flight requests.
+- **prefix**: send the request to the server that most likely has the prompt's prefix in its KV cache, but never let a server go above about 1.25× the average load. This is "consistent hashing with bounded loads".
+
+**The setup.** Four instances of kvrouter's mock vLLM server, which models a prefix cache, slow prefill and batch-dependent decode, but runs on a CPU. 16 tenants, each with a ~3k-token system prompt, 128 conversations of 4 turns, 48 at a time. The prompts add up to more than one server's cache, so where a request goes decides whether its prefix is already cached. A request "meets the SLO" if its time to first token (TTFT) is under 500 ms and each output token takes under 25 ms. Numbers are the mean of 3 runs.
+
+| policy | TTFT p50 | TTFT p90 | req/s | met SLO, req/s | cache hit |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| round_robin | 1058 ms | 3179 ms | 27.1 | 8.8 (33%) | 64.3% |
+| random | 952 ms | 3111 ms | 27.4 | 8.7 (32%) | 65.8% |
+| p2c | 960 ms | 1858 ms | 35.2 | 6.9 (20%) | 69.0% |
+| least_loaded | 290 ms | 1486 ms | 58.0 | 36.2 (62%) | 83.0% |
+| prefix | 18 ms | 751 ms | 106.1 | 89.4 (84%) | 92.6% |
+
+When one tenant sends half the traffic, the order is the same: p2c 54.6 req/s, random 45.1, least_loaded 78.7 and prefix 112.4.
+
+What I take from this:
+
+- **Two choices does what the theory says.** Compared with random, it cuts TTFT p90 from 3.1 s to 1.9 s and raises throughput by about 28%. The second look really does remove the worst queues.
+- **But fewer requests met the SLO.** With random, a few servers happen to be idle, and the lucky requests sent there start almost at once. Two choices evens out the queues, so most requests wait a similar amount of time, and with 4 servers that wait is about 1 second. The tail got better, but the share of requests under 500 ms went down.
+- **Checking every server beat checking two.** The "why not pick the least-loaded server?" section above gives two reasons: cost and herding from stale data. Neither applies here. There are only 4 servers and one router, and the router knows its in-flight counts exactly. There is also a side effect: a server that already has a prompt cached finishes faster, so its count drops, so least_loaded keeps sending it work. That gives it a better cache hit rate (83% vs 69%) almost by accident.
+- **The cache mattered much more than the balance.** Every load-only policy kept most requests above 500 ms, because most of them had to prefill a 3k-token prompt from scratch. The prefix policy hit the cache 93% of the time and served 3× the throughput of two choices.
+
+**On real GPUs.** I also ran the router on 2× H100 with vLLM 0.31.0 (Qwen2.5-7B, 100 tenants, 256 conversations at a time). With only two servers, two choices always checks both, so it should behave the same as least_loaded. I haven't run `random` and `p2c` on GPUs yet:
+
+| policy | multi-tenant, met SLO | one hot tenant, met SLO |
+| --- | ---: | ---: |
+| round_robin | 25 req/s (45%) | 40 req/s (48%) |
+| random | WIP | WIP |
+| p2c | WIP | WIP |
+| least_loaded | 6 req/s (11%) | 109 req/s (73%) |
+| prefix | 142 req/s (85%) | 147 req/s (84%) |
+
+The least_loaded row is the clearest example of "request count is a poor load signal". With many tenants and a busy GPU, balancing by in-flight count kept moving each conversation's turns to the other server, so the cache hit rate fell to 62.5% and only 11% of requests met the SLO. That is worse than round-robin.
 
 ## What BalanceRoute argues
 
@@ -156,16 +197,17 @@ A note first: I am not a load-balancing researcher. These are my notes as someon
 - Checking **two** servers and picking the less loaded one reduces the worst hotspot exponentially compared with random routing.
 - A third choice only helps a little. Most of the gain comes from the second look.
 - In real systems it does better than always picking the global best, because stale data leads to herding, and randomness spreads the mistakes out.
-- For LLM serving, the algorithm is still useful, but the load metric needs care: tokens and KV-cache usage, not request count.
+- For LLM serving, the algorithm is still useful, but the load metric needs care: tokens and KV-cache usage, not request count. In my router tests, two choices cut the tail compared with random, but a cache-aware policy with a load bound served about 3× more requests.
 - The rule assumes servers do not wait for each other. In synchronised LLM serving they do, and BalanceRoute shows that taking this into account gives noticeably higher throughput, especially in larger clusters.
 
-Next, I am building a KV-cache-aware router in Go in front of several vLLM instances. In a follow-up post, I will compare round-robin, random and two choices on real inference traffic, with TTFT and throughput numbers.
+The router, the benchmark and all the raw results are in [kvrouter](https://github.com/sparkling-snail/kvrouter). The GPU runs for `random` and `p2c` are still to do, and I will update the table above when they are done.
 
 ## References
 
 - M. Mitzenmacher. [The Power of Two Choices in Randomized Load Balancing](https://www.eecs.harvard.edu/~michaelm/postscripts/tpds2001.pdf). *IEEE Transactions on Parallel and Distributed Systems*, 12(10), 2001.
 - Y. Azar, A. Broder, A. Karlin, E. Upfal. Balanced Allocations. *SIAM Journal on Computing*, 29(1), 1999. The original balls-into-bins result.
 - M. Mitzenmacher, A. Richa, R. Sitaraman. [The Power of Two Random Choices: A Survey of Techniques and Results](https://www.eecs.harvard.edu/~michaelm/postscripts/handbook2001.pdf). 2001.
+- V. Mirrokni, M. Thorup, M. Zadimoghaddam. Consistent Hashing with Bounded Loads. *SODA*, 2018. The load bound in kvrouter's prefix policy.
 - M. Mitzenmacher. How Useful Is Old Information? *IEEE Transactions on Parallel and Distributed Systems*, 11(1), 2000.
 - [Envoy load balancers: weighted least request](https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/upstream/load_balancing/load_balancers)
 - [Ray Serve: request routing for LLMs](https://docs.ray.io/en/latest/serve/llm/architecture/routing-policies.html)
