@@ -118,13 +118,21 @@ So I turned CUDA graphs off with `--enforce-eager` and reran. Model-a ran at **2
 
 Either way, the practical answer is the same. **With a CUDA-graph server like vLLM, treat HAMi as memory isolation only.** Even if eager mode does buy compute isolation, 26 ms per token is more than twice what MIG costs.
 
-## Two traps that bite before you get to benchmark
+## What went wrong along the way
 
-**vLLM sizes its KV cache wrong when co-located servers start together.** At startup, vLLM measures memory with device-wide snapshots (`cudaMemGetInfo`) before and after loading weights and running a profiling pass. It counts any growth it didn't allocate itself as its own overhead. Under time-slicing, two pods that started at the same moment counted *each other's* weights, and got **2.2 and 2.74 GiB** of KV cache instead of about **10.6 GiB** each. That's room for about 15 full-length requests per server instead of about 75. Nothing errors. You just get queueing and preemption under load, for the life of the process. Starting them one at a time fixed it, and so would pinning `--kv-cache-memory`. Under MIG and HAMi, pods started together got identical, healthy caches, because each process only sees its own memory.
+Most of the afternoon went on getting to the benchmark, not running it. Two of the problems would quietly skew results on a real serving cluster. The other three are setup gotchas that cost me time.
 
-**Rolling updates deadlock on a full GPU.** When I changed a Deployment's args, Kubernetes started the new pod before stopping the old one, which is the default `RollingUpdate`. HAMi's scheduler answered `CardInsufficientMemory` (38,000 MiB held plus 19,000 needed is more than 40,960), and the new pods sat `Pending` forever. GPU serving Deployments want `strategy: Recreate`, or `maxSurge: 0`.
+**vLLM sizes its KV cache wrong when co-located servers start together.** At startup, vLLM measures memory with device-wide snapshots (`cudaMemGetInfo`) before and after loading weights and running a profiling pass. It counts any growth it didn't allocate itself as its own overhead. Under time-slicing, two pods that started at the same moment counted *each other's* weights, and got **2.2 and 2.74 GiB** of KV cache instead of about **10.6 GiB** each. That's room for about 15 full-length requests per server instead of about 75. Nothing errors. You just get queueing and preemption under load, for the life of the process. Starting them one at a time fixed it, and so would pinning `--kv-cache-memory`. Under MIG and HAMi, pods started together got identical, healthy caches, because each process only sees its own memory. *Lesson: on a shared GPU, check the KV cache size in the startup log, not just whether the pod is Ready.*
 
-One setup note: with MIG enabled, the plain device-plugin chart crashed with `Insufficient Permissions`, because reading MIG slices needs device files the default locked-down container can't see. `--set securityContext.privileged=true` fixed it. The GPU Operator handles this for you.
+**Rolling updates deadlock on a full GPU.** When I changed a Deployment's args, Kubernetes started the new pod before stopping the old one, which is the default `RollingUpdate`. HAMi's scheduler answered `CardInsufficientMemory` (38,000 MiB held plus 19,000 needed is more than 40,960), and the new pods sat `Pending` forever. *Lesson: GPU serving Deployments want `strategy: Recreate`, or `maxSurge: 0`.*
+
+**The device plugin scheduled zero pods.** The Helm install succeeded, but the DaemonSet showed `DESIRED 0`. Its node affinity requires the label `nvidia.com/gpu.present=true`, which GPU Feature Discovery normally adds. On a bare k3s node nothing adds it, so `kubectl label node <node> nvidia.com/gpu.present=true` fixed it. HAMi works the same way with its own label, `gpu=on`.
+
+**With MIG enabled, the device plugin crashed with `Insufficient Permissions`.** Reading MIG slices needs device files the default locked-down container can't see. `--set securityContext.privileged=true` fixed it.
+
+**`kubectl logs -f deploy/...` showed the old pod.** After a restart, it picked a pod that was still terminating, so I watched a server that was about to die. Following the new pod by name avoids it.
+
+The last three have one thing in common: the charts assume the GPU Operator is installed, and it does the labelling and permissions for you. Installing the pieces by hand taught me what the Operator actually does, but it's not how I'd run a real cluster.
 
 ## So which one should you use?
 
